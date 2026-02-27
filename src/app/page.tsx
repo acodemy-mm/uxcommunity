@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 export default async function HomePage() {
   const supabase = await createClient();
 
-  const [articlesRes, videosRes, jobsRes, challengesRes] = await Promise.all([
+  const [articlesRes, videosRes, , challengesRes] = await Promise.all([
     supabase.from("articles").select("id, title, slug, excerpt, created_at").eq("published", true).order("created_at", { ascending: false }).limit(3),
     supabase.from("video_courses").select("id, title, youtube_url, thumbnail").order("order_index").limit(3),
     supabase.from("job_posts").select("id, title, company, location").order("created_at", { ascending: false }).limit(3),

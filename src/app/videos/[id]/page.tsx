@@ -9,6 +9,7 @@ import {
   BookmarkPlus,
   Share2,
 } from "lucide-react";
+import { SignInGate } from "@/components/SignInGate";
 
 function getYouTubeEmbedUrl(url: string): string {
   const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&]+)/);
@@ -31,9 +32,29 @@ export default async function VideoDetailPage({
   searchParams: Promise<{ lesson?: string }>;
 }) {
   const { id } = await params;
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return (
+      <div className="p-6 lg:p-8">
+        <Link
+          href="/videos"
+          className="mb-6 inline-flex items-center gap-2 text-slate-400 hover:text-indigo-400"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Courses
+        </Link>
+        <SignInGate
+          title="Sign in to view this course"
+          description="Create an account or sign in to watch lessons and track your progress."
+        />
+      </div>
+    );
+  }
+
   const { lesson: lessonParam } = await searchParams;
   const lessonIndex = Math.max(0, Math.min(parseInt(lessonParam ?? "0", 10) || 0, 999));
-  const supabase = await createClient();
   const { data: video, error } = await supabase
     .from("video_courses")
     .select("*")

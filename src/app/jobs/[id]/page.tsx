@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { ArrowLeft, Heart, Share2 } from "lucide-react";
+import { SignInGate } from "@/components/SignInGate";
 
 export const dynamic = "force-dynamic";
 
@@ -45,6 +46,26 @@ export default async function JobDetailPage({
 }) {
   const { id } = await params;
   const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return (
+      <div className="p-6 lg:p-8">
+        <Link
+          href="/jobs"
+          className="mb-6 inline-flex items-center gap-2 text-slate-400 hover:text-indigo-400"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Job Posts
+        </Link>
+        <SignInGate
+          title="Sign in to view this job"
+          description="Create an account or sign in to view full job details and apply."
+        />
+      </div>
+    );
+  }
+
   const { data: job, error } = await supabase
     .from("job_posts")
     .select("*")

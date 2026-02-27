@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { Briefcase, MapPin } from "lucide-react";
+import { SignInGate } from "@/components/SignInGate";
 
 export const dynamic = "force-dynamic";
 
@@ -25,10 +26,7 @@ function getCompanyInitials(company: string): string {
 
 export default async function JobsPage() {
   const supabase = await createClient();
-  const { data: jobs } = await supabase
-    .from("job_posts")
-    .select("*")
-    .order("created_at", { ascending: false });
+  const { data: { user } } = await supabase.auth.getUser();
 
   return (
     <div className="p-6 lg:p-8">
@@ -42,7 +40,27 @@ export default async function JobsPage() {
         </p>
       </div>
 
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      {!user ? (
+        <SignInGate
+          title="Sign in to view job posts"
+          description="Create an account or sign in to browse job listings and apply."
+        />
+      ) : (
+        <JobsContent />
+      )}
+    </div>
+  );
+}
+
+async function JobsContent() {
+  const supabase = await createClient();
+  const { data: jobs } = await supabase
+    .from("job_posts")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  return (
+    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {jobs?.length ? (
           jobs.map((job) => {
             const category = (job as { category?: string }).category ?? job.job_type;
@@ -94,7 +112,6 @@ export default async function JobsPage() {
             <p className="text-slate-500">No job posts yet. Check back soon!</p>
           </div>
         )}
-      </div>
     </div>
   );
 }

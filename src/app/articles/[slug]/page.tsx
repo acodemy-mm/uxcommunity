@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { ArrowLeft, Clock, ThumbsUp, Bookmark, Share2 } from "lucide-react";
+import { ArrowLeft, ThumbsUp, Bookmark, Share2 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 

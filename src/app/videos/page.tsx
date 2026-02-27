@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { BookOpen, Clock, Star, ChevronRight, Search } from "lucide-react";
+import { SignInGate } from "@/components/SignInGate";
 
 function formatDuration(minutes: number | null): string {
   if (!minutes) return "—";
@@ -27,10 +28,7 @@ function getCardColor(difficulty: string): string {
 
 export default async function VideosPage() {
   const supabase = await createClient();
-  const { data: videos } = await supabase
-    .from("video_courses")
-    .select("*")
-    .order("order_index");
+  const { data: { user } } = await supabase.auth.getUser();
 
   return (
     <div className="p-6 lg:p-8">
@@ -45,22 +43,43 @@ export default async function VideosPage() {
             Learn UX design at your own pace
           </p>
         </div>
-        <div className="w-full sm:w-64 sm:shrink-0">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
-            <input
-              type="search"
-              placeholder="Search courses..."
-              className="w-full rounded-lg border border-slate-700 bg-slate-800/50 py-2.5 pl-10 pr-4 text-sm text-slate-100 placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-            />
+        {user && (
+          <div className="w-full sm:w-64 sm:shrink-0">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+              <input
+                type="search"
+                placeholder="Search courses..."
+                className="w-full rounded-lg border border-slate-700 bg-slate-800/50 py-2.5 pl-10 pr-4 text-sm text-slate-100 placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              />
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
-      {/* Course cards grid */}
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      {!user ? (
+        <SignInGate
+          title="Sign in to view courses"
+          description="Create an account or sign in to browse video courses and lessons."
+        />
+      ) : (
+        <VideosContent />
+      )}
+    </div>
+  );
+}
+
+async function VideosContent() {
+  const supabase = await createClient();
+  const { data: videos } = await supabase
+    .from("video_courses")
+    .select("*")
+    .order("order_index");
+
+  return (
+    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {videos?.length ? (
-          videos.map((video, index) => {
+          videos.map((video) => {
             const difficulty = (video as { difficulty_level?: string }).difficulty_level ?? "Beginner";
             const lessons = (video as { lessons_count?: number }).lessons_count ?? 0;
             const rating = (video as { rating?: number }).rating ?? 4.5;
@@ -129,6 +148,5 @@ export default async function VideosPage() {
           </div>
         )}
       </div>
-    </div>
   );
 }

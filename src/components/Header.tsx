@@ -5,10 +5,6 @@ import { createClient } from "@/lib/supabase/server";
 export default async function Header() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  const { data: profile } = user
-    ? await supabase.from("profiles").select("role").eq("id", user.id).single()
-    : { data: null };
-  const isAdmin = profile?.role === "admin";
 
   return (
     <header className="sticky top-0 z-30 border-b border-slate-800 bg-[#0f0f1e]/95 backdrop-blur">
