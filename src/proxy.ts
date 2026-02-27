@@ -1,8 +1,14 @@
-import { type NextRequest } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 
 export async function proxy(request: NextRequest) {
-  return await updateSession(request);
+  try {
+    return await updateSession(request);
+  } catch {
+    // If session refresh fails (e.g. missing env at edge), continue to the app.
+    // The route handler will still run; auth may just be stale until env is set.
+    return NextResponse.next({ request });
+  }
 }
 
 export const config = {
