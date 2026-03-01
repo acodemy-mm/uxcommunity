@@ -36,6 +36,9 @@ export default async function AdminLayout({
         <Link href="/admin/challenges" className="text-slate-400 hover:text-slate-100 font-medium">
           Challenges
         </Link>
+        <Link href="/admin/users" className="text-slate-400 hover:text-slate-100 font-medium">
+          Users
+        </Link>
       </nav>
 
       {children}

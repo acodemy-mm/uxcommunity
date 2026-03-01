@@ -4,12 +4,13 @@ import { createClient } from "@/lib/supabase/server";
 export default async function AdminDashboard() {
   const supabase = await createClient();
 
-  const [articlesRes, videosRes, podcastsRes, jobsRes, challengesRes] = await Promise.all([
+  const [articlesRes, videosRes, podcastsRes, jobsRes, challengesRes, profilesRes] = await Promise.all([
     supabase.from("articles").select("*", { count: "exact", head: true }),
     supabase.from("video_courses").select("*", { count: "exact", head: true }),
     supabase.from("podcasts").select("*", { count: "exact", head: true }),
     supabase.from("job_posts").select("*", { count: "exact", head: true }),
     supabase.from("challenges").select("*", { count: "exact", head: true }),
+    supabase.from("profiles").select("*", { count: "exact", head: true }),
   ]);
 
   const stats = [
@@ -18,10 +19,11 @@ export default async function AdminDashboard() {
     { label: "Podcasts", count: podcastsRes.count ?? 0, href: "/admin/podcasts" },
     { label: "Jobs", count: jobsRes.count ?? 0, href: "/admin/jobs" },
     { label: "Challenges", count: challengesRes.count ?? 0, href: "/admin/challenges" },
+    { label: "Users", count: profilesRes.count ?? 0, href: "/admin/users" },
   ];
 
   return (
-    <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-4">
+    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
       {stats.map((stat) => (
         <Link
           key={stat.label}
