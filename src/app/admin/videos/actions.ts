@@ -169,3 +169,29 @@ export async function deleteVideo(id: string) {
   revalidatePath("/videos");
   revalidatePath("/");
 }
+
+export async function grantCourseAccess(courseId: string, userId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user?.id).single();
+  if (profile?.role !== "admin") throw new Error("Unauthorized");
+  const { error } = await supabase.from("user_course_access").insert({
+    course_id: courseId,
+    user_id: userId,
+    granted_by: user?.id ?? null,
+  });
+  if (error) throw error;
+  revalidatePath("/admin/videos");
+  revalidatePath("/videos");
+}
+
+export async function revokeCourseAccess(courseId: string, userId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user?.id).single();
+  if (profile?.role !== "admin") throw new Error("Unauthorized");
+  const { error } = await supabase.from("user_course_access").delete().eq("course_id", courseId).eq("user_id", userId);
+  if (error) throw error;
+  revalidatePath("/admin/videos");
+  revalidatePath("/videos");
+}

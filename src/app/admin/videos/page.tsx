@@ -38,6 +38,12 @@ export default async function AdminVideosPage() {
                 <td className="px-4 py-3 text-slate-400 text-sm truncate max-w-xs">{video.youtube_url}</td>
                 <td className="px-4 py-3 text-right">
                   <Link
+                    href={`/admin/videos/${video.id}/access`}
+                    className="text-slate-400 hover:text-indigo-400 font-medium mr-4"
+                  >
+                    Access
+                  </Link>
+                  <Link
                     href={`/admin/videos/${video.id}/edit`}
                     className="text-indigo-400 hover:underline font-medium"
                   >

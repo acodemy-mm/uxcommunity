@@ -18,12 +18,25 @@ export default function LoginPage() {
     setLoading(true);
     setError(null);
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
 
-    if (error) {
-      setError(error.message);
+    if (signInError) {
+      setError(signInError.message);
       setLoading(false);
       return;
+    }
+
+    if (data.user) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", data.user.id)
+        .single();
+      if (profile?.role === "admin") {
+        router.push("/admin");
+        router.refresh();
+        return;
+      }
     }
 
     router.push("/");

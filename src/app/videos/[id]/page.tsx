@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getCachedUser } from "@/lib/supabase/server";
 import {
   ArrowLeft,
   Clock,
@@ -32,8 +32,7 @@ export default async function VideoDetailPage({
   searchParams: Promise<{ lesson?: string }>;
 }) {
   const { id } = await params;
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getCachedUser();
 
   if (!user) {
     return (
@@ -55,19 +54,53 @@ export default async function VideoDetailPage({
 
   const { lesson: lessonParam } = await searchParams;
   const lessonIndex = Math.max(0, Math.min(parseInt(lessonParam ?? "0", 10) || 0, 999));
-  const { data: video, error } = await supabase
-    .from("video_courses")
-    .select("*")
-    .eq("id", id)
-    .single();
 
+  const supabase = await createClient();
+  const [videoRes, profileRes, courseAccessRes, myAccessRes, lessonsRes] = await Promise.all([
+    supabase.from("video_courses").select("*").eq("id", id).single(),
+    supabase.from("profiles").select("role").eq("id", user.id).single(),
+    supabase.from("user_course_access").select("course_id").eq("course_id", id),
+    supabase.from("user_course_access").select("id").eq("course_id", id).eq("user_id", user.id).maybeSingle(),
+    supabase.from("course_lessons").select("id, title, youtube_url, duration_minutes, sort_order").eq("course_id", id).order("sort_order"),
+  ]);
+
+  const { data: video, error } = videoRes;
   if (error || !video) notFound();
 
-  const { data: lessons } = await supabase
-    .from("course_lessons")
-    .select("id, title, youtube_url, duration_minutes, sort_order")
-    .eq("course_id", id)
-    .order("sort_order");
+  const profile = profileRes.data;
+  const isAdmin = profile?.role === "admin";
+  const courseAccessRows = courseAccessRes.data ?? [];
+  const isRestricted = courseAccessRows.length > 0;
+  const myAccess = myAccessRes.data;
+  const canView = isAdmin || !isRestricted || !!myAccess;
+
+  if (!canView) {
+    return (
+      <div className="p-6 lg:p-8">
+        <Link
+          href="/videos"
+          className="mb-6 inline-flex items-center gap-2 text-slate-400 hover:text-indigo-400"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Courses
+        </Link>
+        <div className="rounded-xl border border-slate-700/50 bg-[#16162a] p-8 text-center">
+          <h2 className="text-xl font-semibold text-white">Access restricted</h2>
+          <p className="mt-2 text-slate-400">
+            You don&apos;t have access to this course. Contact an admin to request access.
+          </p>
+          <Link
+            href="/videos"
+            className="mt-6 inline-block rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500"
+          >
+            Back to courses
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const lessons = lessonsRes.data;
 
   const lessonList =
     lessons && lessons.length > 0

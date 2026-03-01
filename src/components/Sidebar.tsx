@@ -1,14 +1,11 @@
 import Link from "next/link";
 import { User } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
+import { getCachedUser, getCachedProfile } from "@/lib/supabase/server";
 import { SidebarNav } from "./SidebarNav";
 
 export default async function Sidebar() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  const { data: profile } = user
-    ? await supabase.from("profiles").select("role").eq("id", user.id).single()
-    : { data: null };
+  const user = await getCachedUser();
+  const profile = await getCachedProfile(user?.id);
   const isAdmin = profile?.role === "admin";
 
   return (

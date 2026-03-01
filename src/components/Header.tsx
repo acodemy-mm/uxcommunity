@@ -1,10 +1,9 @@
 import Link from "next/link";
 import { Search } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
+import { getCachedUser } from "@/lib/supabase/server";
 
 export default async function Header() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getCachedUser();
 
   return (
     <header className="sticky top-0 z-30 border-b border-slate-800 bg-[#0f0f1e]/95 backdrop-blur">

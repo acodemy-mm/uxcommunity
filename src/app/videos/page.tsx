@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getCachedUser } from "@/lib/supabase/server";
 import { BookOpen, Clock, Star, ChevronRight, Search } from "lucide-react";
 import { SignInGate } from "@/components/SignInGate";
 
@@ -27,8 +27,7 @@ function getCardColor(difficulty: string): string {
 }
 
 export default async function VideosPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getCachedUser();
 
   return (
     <div className="p-6 lg:p-8">
@@ -63,23 +62,35 @@ export default async function VideosPage() {
           description="Create an account or sign in to browse video courses and lessons."
         />
       ) : (
-        <VideosContent />
+        <VideosContent userId={user.id} />
       )}
     </div>
   );
 }
 
-async function VideosContent() {
+async function VideosContent({ userId }: { userId: string }) {
   const supabase = await createClient();
-  const { data: videos } = await supabase
-    .from("video_courses")
-    .select("*")
-    .order("order_index");
+  const [videosRes, profileRes, restrictedRes, myAccessRes] = await Promise.all([
+    supabase.from("video_courses").select("*").order("order_index"),
+    supabase.from("profiles").select("role").eq("id", userId).single(),
+    supabase.from("user_course_access").select("course_id"),
+    supabase.from("user_course_access").select("course_id").eq("user_id", userId),
+  ]);
+
+  const videos = videosRes.data;
+  const profile = profileRes.data;
+  const isAdmin = profile?.role === "admin";
+  const restrictedSet = new Set((restrictedRes.data ?? []).map((r) => r.course_id));
+  const myAccessSet = new Set((myAccessRes.data ?? []).map((a) => a.course_id));
+
+  const canView = (courseId: string) =>
+    isAdmin || !restrictedSet.has(courseId) || myAccessSet.has(courseId);
+  const visibleVideos = videos?.filter((v) => canView(v.id)) ?? [];
 
   return (
     <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {videos?.length ? (
-          videos.map((video) => {
+        {visibleVideos.length ? (
+          visibleVideos.map((video) => {
             const difficulty = (video as { difficulty_level?: string }).difficulty_level ?? "Beginner";
             const lessons = (video as { lessons_count?: number }).lessons_count ?? 0;
             const rating = (video as { rating?: number }).rating ?? 4.5;
@@ -144,7 +155,9 @@ async function VideosContent() {
         ) : (
           <div className="col-span-full flex flex-col items-center justify-center rounded-xl border border-slate-700/50 bg-[#16162a] py-24">
             <BookOpen className="mb-4 h-16 w-16 text-slate-600" />
-            <p className="text-slate-500">No courses yet. Check back soon!</p>
+            <p className="text-slate-500">
+              {videos?.length ? "No courses available to you yet." : "No courses yet. Check back soon!"}
+            </p>
           </div>
         )}
       </div>

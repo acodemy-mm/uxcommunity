@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
@@ -28,3 +29,18 @@ export async function createClient() {
     }
   );
 }
+
+/** Cached per-request so Header, Sidebar, and page share one auth call. */
+export const getCachedUser = cache(async () => {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  return user;
+});
+
+/** Cached per-request per userId so profile is fetched once. */
+export const getCachedProfile = cache(async (userId: string | undefined) => {
+  if (!userId) return null;
+  const supabase = await createClient();
+  const { data } = await supabase.from("profiles").select("role").eq("id", userId).single();
+  return data;
+});
