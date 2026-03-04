@@ -16,8 +16,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
-      <body className="antialiased bg-[#0f0f1e] text-slate-100">
+    <html lang="en" className="dark" suppressHydrationWarning>
+      <body className="antialiased bg-[#0f0f1e] text-slate-100" suppressHydrationWarning>
         <SidebarOpenProvider>
           <SidebarWrapper>
             <Sidebar />
