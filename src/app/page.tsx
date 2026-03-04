@@ -1,143 +1,92 @@
-import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getCachedUser, getCachedProfile } from "@/lib/supabase/server";
+import { BentoGrid, type ContentItem } from "@/components/BentoGrid";
 
 export default async function HomePage() {
   const supabase = await createClient();
+  const user = await getCachedUser();
+  const profile = await getCachedProfile(user?.id);
+  const isAdmin = profile?.role === "admin";
 
-  const [articlesRes, videosRes, , challengesRes] = await Promise.all([
-    supabase.from("articles").select("id, title, slug, excerpt, created_at").eq("published", true).order("created_at", { ascending: false }).limit(3),
-    supabase.from("video_courses").select("id, title, youtube_url, thumbnail").order("order_index").limit(3),
-    supabase.from("job_posts").select("id, title, company, location").order("created_at", { ascending: false }).limit(3),
-    supabase.from("challenges").select("id, title, start_date, end_date").order("end_date", { ascending: false }).limit(3),
+  const [articlesRes, videosRes, challengesRes, jobsRes] = await Promise.all([
+    supabase.from("articles").select("id, title, slug, excerpt, created_at")
+      .eq("published", true).order("created_at", { ascending: false }).limit(6),
+    supabase.from("video_courses").select("id, title, description, thumbnail, duration_minutes, difficulty_level")
+      .order("order_index").limit(6),
+    supabase.from("challenges").select("id, title, start_date, end_date")
+      .order("end_date", { ascending: false }).limit(4),
+    supabase.from("job_posts").select("id, title, company, location, created_at")
+      .order("created_at", { ascending: false }).limit(4),
   ]);
 
-  return (
-    <div className="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8">
-      <section className="text-center mb-10 sm:mb-16">
-        <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-100 mb-3 sm:mb-4">
-          UX Community
-        </h1>
-        <p className="text-base sm:text-xl text-slate-400 max-w-2xl mx-auto px-1">
-          Your hub for UX articles, video courses, podcasts, job opportunities, and design challenges.
-        </p>
-      </section>
+  let myAccessSet = new Set<string>();
+  if (user && !isAdmin) {
+    const { data: access } = await supabase
+      .from("user_course_access").select("course_id").eq("user_id", user.id);
+    (access ?? []).forEach((a) => myAccessSet.add(a.course_id));
+  }
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-        <Link
-          href="/articles"
-          className="p-6 rounded-xl border border-slate-700/50 bg-[#16162a] hover:border-indigo-500/30 transition-all"
-        >
-          <div className="text-3xl mb-2">📝</div>
-          <h2 className="font-semibold text-slate-100">Articles</h2>
-          <p className="text-sm text-slate-400 mt-1">UX insights & best practices</p>
-        </Link>
-        <Link
-          href="/videos"
-          className="p-6 rounded-xl border border-slate-700/50 bg-[#16162a] hover:border-indigo-500/30 transition-all"
-        >
-          <div className="text-3xl mb-2">🎬</div>
-          <h2 className="font-semibold text-slate-100">Video Courses</h2>
-          <p className="text-sm text-slate-400 mt-1">Learn from YouTube</p>
-        </Link>
-        <Link
-          href="/podcasts"
-          className="p-6 rounded-xl border border-slate-700/50 bg-[#16162a] hover:border-indigo-500/30 transition-all"
-        >
-          <div className="text-3xl mb-2">🎧</div>
-          <h2 className="font-semibold text-slate-100">Podcasts</h2>
-          <p className="text-sm text-slate-400 mt-1">Listen & learn</p>
-        </Link>
-        <Link
-          href="/jobs"
-          className="p-6 rounded-xl border border-slate-700/50 bg-[#16162a] hover:border-indigo-500/30 transition-all"
-        >
-          <div className="text-3xl mb-2">💼</div>
-          <h2 className="font-semibold text-slate-100">Job Posts</h2>
-          <p className="text-sm text-slate-400 mt-1">Find your next role</p>
-        </Link>
+  const items: ContentItem[] = [];
+
+  for (const a of articlesRes.data ?? []) {
+    items.push({
+      id: `article-${a.id}`, type: "article",
+      title: a.title, description: a.excerpt ?? undefined,
+      href: `/articles/${a.slug}`,
+      date: new Date(a.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+    });
+  }
+
+  for (const v of videosRes.data ?? []) {
+    const canAccess = isAdmin || myAccessSet.has(v.id);
+    const mins = (v as { duration_minutes?: number | null }).duration_minutes;
+    items.push({
+      id: `video-${v.id}`, type: "video",
+      title: v.title, description: v.description ?? undefined,
+      href: `/videos/${v.id}`,
+      thumbnail: (v as { thumbnail?: string | null }).thumbnail,
+      meta: !mins ? "Self-paced" : mins >= 60 ? `${Math.floor(mins/60)}h ${mins%60 ? `${mins%60}m` : ""}`.trim() : `${mins}m`,
+      extra: (v as { difficulty_level?: string }).difficulty_level ?? undefined,
+      locked: !canAccess,
+    });
+  }
+
+  for (const c of challengesRes.data ?? []) {
+    items.push({
+      id: `challenge-${c.id}`, type: "challenge",
+      title: c.title, href: `/challenges/${c.id}`,
+      meta: `${new Date(c.start_date).toLocaleDateString("en-US", { month: "short", day: "numeric" })} – ${new Date(c.end_date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}`,
+    });
+  }
+
+  for (const j of jobsRes.data ?? []) {
+    items.push({
+      id: `job-${j.id}`, type: "job",
+      title: j.title,
+      description: [(j as { company?: string }).company, (j as { location?: string }).location].filter(Boolean).join(" · "),
+      href: `/jobs/${j.id}`,
+      date: new Date((j as { created_at: string }).created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+    });
+  }
+
+  return (
+    <div className="px-4 pb-10 pt-5 sm:px-5 lg:px-8">
+      {/* iOS large title */}
+      <div className="mb-6">
+        <p className="text-[11px] font-semibold uppercase tracking-widest mb-1"
+          style={{ color: "rgba(235,235,245,0.45)" }}>
+          Discover
+        </p>
+        <h1 className="text-[34px] font-bold tracking-tight text-white leading-none">
+          {user
+            ? `Welcome back${(user.email?.split("@")[0] ?? "").replace(/[._-]/g, " ").replace(/\b\w/g, c => c.toUpperCase()) ? `, ${user.email!.split("@")[0].replace(/[._-]/g, " ").replace(/\b\w/g, c => c.toUpperCase())}` : ""}`
+            : "UX Community"}
+        </h1>
+        <p className="mt-1 text-[15px]" style={{ color: "rgba(235,235,245,0.55)" }}>
+          Articles, courses, challenges &amp; more
+        </p>
       </div>
 
-      <section className="mt-16 grid lg:grid-cols-2 gap-12">
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-bold text-slate-100">Latest Articles</h2>
-            <Link href="/articles" className="text-indigo-400 hover:text-indigo-300 font-medium">
-              View all
-            </Link>
-          </div>
-          <div className="space-y-4">
-            {articlesRes.data?.length ? (
-              articlesRes.data.map((article) => (
-                <Link
-                  key={article.id}
-                  href={`/articles/${article.slug}`}
-                  className="block p-4 rounded-lg border border-slate-700/50 bg-[#16162a] hover:border-indigo-500/30 transition-colors"
-                >
-                  <h3 className="font-medium text-slate-100">{article.title}</h3>
-                  <p className="text-sm text-slate-400 mt-1 line-clamp-2">{article.excerpt}</p>
-                  <span className="text-xs text-slate-500 mt-2 block">
-                    {new Date(article.created_at).toLocaleDateString()}
-                  </span>
-                </Link>
-              ))
-            ) : (
-              <p className="text-slate-500 py-8">No articles yet. Check back soon!</p>
-            )}
-          </div>
-        </div>
-
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-bold text-slate-100">Video Courses</h2>
-            <Link href="/videos" className="text-indigo-400 hover:text-indigo-300 font-medium">
-              View all
-            </Link>
-          </div>
-          <div className="space-y-4">
-            {videosRes.data?.length ? (
-              videosRes.data.map((video) => (
-                <Link
-                  key={video.id}
-                  href={`/videos/${video.id}`}
-                  className="block p-4 rounded-lg border border-slate-700/50 bg-[#16162a] hover:border-indigo-500/30 transition-colors"
-                >
-                  <h3 className="font-medium text-slate-100">{video.title}</h3>
-                  <span className="text-xs text-slate-500 mt-2 block">Video course</span>
-                </Link>
-              ))
-            ) : (
-              <p className="text-slate-500 py-8">No videos yet. Check back soon!</p>
-            )}
-          </div>
-        </div>
-      </section>
-
-      <section className="mt-16">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-bold text-slate-100">Design Challenges</h2>
-          <Link href="/challenges" className="text-indigo-400 hover:text-indigo-300 font-medium">
-            View all
-          </Link>
-        </div>
-        <div className="grid md:grid-cols-3 gap-4">
-          {challengesRes.data?.length ? (
-            challengesRes.data.map((challenge) => (
-              <Link
-                key={challenge.id}
-                href={`/challenges/${challenge.id}`}
-                className="block p-4 rounded-lg border border-slate-700/50 bg-[#16162a] hover:border-indigo-500/30 transition-colors"
-              >
-                <h3 className="font-medium text-slate-100">{challenge.title}</h3>
-                <span className="text-xs text-slate-500 mt-2 block">
-                  {new Date(challenge.start_date).toLocaleDateString()} - {new Date(challenge.end_date).toLocaleDateString()}
-                </span>
-              </Link>
-            ))
-          ) : (
-            <p className="text-slate-500 col-span-3 py-8">No challenges yet. Check back soon!</p>
-          )}
-        </div>
-      </section>
+      <BentoGrid items={items} />
     </div>
   );
 }

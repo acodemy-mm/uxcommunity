@@ -2,63 +2,87 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  Home,
-  FileText,
-  Headphones,
-  BookOpen,
-  Trophy,
-  Briefcase,
-  ChevronRight,
-} from "lucide-react";
 import { useSidebarOpen } from "./SidebarContext";
+import { ChevronRight } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-const navItems = [
-  { href: "/", label: "Home", icon: Home },
-  { href: "/articles", label: "Articles", icon: FileText },
-  { href: "/podcasts", label: "Podcasts", icon: Headphones },
-  { href: "/videos", label: "Courses", icon: BookOpen },
-  { href: "/challenges", label: "Challenges", icon: Trophy },
-  { href: "/jobs", label: "Job Posts", icon: Briefcase },
+type NavItem = {
+  href: string;
+  label: string;
+  emoji: string;
+  color: string;  /* iOS icon background */
+};
+
+const NAV_ITEMS: NavItem[] = [
+  { href: "/",           label: "Home",       emoji: "🏠", color: "#0A84FF" },
+  { href: "/articles",   label: "Articles",   emoji: "📝", color: "#BF5AF2" },
+  { href: "/videos",     label: "Courses",    emoji: "🎬", color: "#FF375F" },
+  { href: "/podcasts",   label: "Podcasts",   emoji: "🎧", color: "#FF9F0A" },
+  { href: "/challenges", label: "Challenges", emoji: "🏆", color: "#30D158" },
+  { href: "/jobs",       label: "Job Board",  emoji: "💼", color: "#40CBE0" },
 ];
 
-export function SidebarNav() {
+export function SidebarNav({ isAdmin }: { isAdmin?: boolean }) {
   const pathname = usePathname();
   const { setOpen } = useSidebarOpen();
 
   return (
-    <nav className="space-y-1 px-3">
-      {navItems.map((item) => {
-        const Icon = item.icon;
-        const isActive =
-          item.href === "/"
+    <nav>
+      {/* Section label */}
+      <p className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-widest"
+        style={{ color: "rgba(235,235,245,0.4)" }}>
+        Browse
+      </p>
+
+      {/* iOS grouped list — rounded container with internal separators */}
+      <div className="overflow-hidden rounded-2xl bg-[#1C1C1E]">
+        {NAV_ITEMS.map((item, i) => {
+          const isActive = item.href === "/"
             ? pathname === "/"
             : pathname.startsWith(item.href);
-        return (
-          <Link
-            key={item.href}
-            href={item.href}
-            onClick={() => setOpen(false)}
-            className={`group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors ${
-              isActive
-                ? "bg-indigo-500/20 text-indigo-300"
-                : "text-slate-400 hover:bg-slate-800/50 hover:text-slate-100"
-            }`}
-          >
-            <span
-              className={
-                isActive ? "text-indigo-400" : "text-slate-500 group-hover:text-slate-300"
-              }
-            >
-              <Icon className="h-5 w-5" />
-            </span>
-            <span className="flex-1 font-medium">{item.label}</span>
-            <ChevronRight
-              className={`h-4 w-4 ${isActive ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}
-            />
-          </Link>
-        );
-      })}
+          const isLast = i === NAV_ITEMS.length - 1;
+
+          return (
+            <div key={item.href}>
+              <Link
+                href={item.href}
+                onClick={() => setOpen(false)}
+                className={cn(
+                  "group flex items-center gap-3 px-4 py-3 ios-spring active:bg-[#2C2C2E]",
+                  isActive ? "bg-[#2C2C2E]" : "hover:bg-[#252525]"
+                )}
+              >
+                {/* iOS-style colored icon box */}
+                <span
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[8px] text-[16px] shadow-sm"
+                  style={{ backgroundColor: item.color }}
+                >
+                  {item.emoji}
+                </span>
+
+                <span className={cn(
+                  "flex-1 text-[15px]",
+                  isActive ? "font-semibold text-white" : "font-medium text-white/90"
+                )}>
+                  {item.label}
+                </span>
+
+                <ChevronRight className={cn(
+                  "h-4 w-4 ios-spring",
+                  isActive
+                    ? "text-[rgba(235,235,245,0.5)]"
+                    : "text-[rgba(235,235,245,0.25)] group-hover:text-[rgba(235,235,245,0.4)]"
+                )} />
+              </Link>
+
+              {/* iOS inset separator — only between items, not after last */}
+              {!isLast && (
+                <div className="ml-[60px] ios-separator" />
+              )}
+            </div>
+          );
+        })}
+      </div>
     </nav>
   );
 }

@@ -8,6 +8,7 @@ import {
   Play,
   BookmarkPlus,
   Share2,
+  Lock,
 } from "lucide-react";
 import { SignInGate } from "@/components/SignInGate";
 
@@ -33,10 +34,38 @@ export default async function VideoDetailPage({
 }) {
   const { id } = await params;
   const user = await getCachedUser();
+  const supabase = await createClient();
 
-  if (!user) {
+  // Always fetch video metadata (public) so we can show the locked detail page.
+  const { data: video, error } = await supabase
+    .from("video_courses")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (error || !video) notFound();
+
+  // Determine access
+  let isAdmin = false;
+  let myAccess = null;
+
+  if (user) {
+    const [profileRes, myAccessRes] = await Promise.all([
+      supabase.from("profiles").select("role").eq("id", user.id).single(),
+      supabase.from("user_course_access").select("id").eq("course_id", id).eq("user_id", user.id).maybeSingle(),
+    ]);
+    isAdmin = profileRes.data?.role === "admin";
+    myAccess = myAccessRes.data;
+  }
+
+  const canView = isAdmin || !!myAccess;
+  const difficulty = (video as { difficulty_level?: string }).difficulty_level ?? "Beginner";
+  const rating = (video as { rating?: number }).rating ?? 4.5;
+
+  // Locked view — shown to guests and users without access
+  if (!canView) {
     return (
-      <div className="p-6 lg:p-8">
+      <div className="p-4 sm:p-6 lg:p-8">
         <Link
           href="/videos"
           className="mb-6 inline-flex items-center gap-2 text-slate-400 hover:text-indigo-400"
@@ -44,10 +73,90 @@ export default async function VideoDetailPage({
           <ArrowLeft className="h-4 w-4" />
           Courses
         </Link>
-        <SignInGate
-          title="Sign in to view this course"
-          description="Create an account or sign in to watch lessons and track your progress."
-        />
+
+        {/* Course info header */}
+        <div className="mb-6">
+          <p className="text-xs font-medium uppercase tracking-wider text-slate-500 mb-1">{difficulty}</p>
+          <h1 className="text-2xl font-bold text-white lg:text-3xl">{video.title}</h1>
+          {video.description && (
+            <p className="mt-2 text-slate-400 max-w-2xl">{video.description}</p>
+          )}
+        </div>
+
+        {/* Locked player placeholder */}
+        <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+          <div className="space-y-4">
+            <div className="overflow-hidden rounded-xl border border-slate-700/50 bg-[#16162a]">
+              <div className="aspect-video flex flex-col items-center justify-center gap-4 bg-slate-900/80">
+                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-slate-800 border border-slate-700">
+                  <Lock className="h-9 w-9 text-slate-500" />
+                </div>
+                <div className="text-center px-6">
+                  <p className="text-lg font-semibold text-slate-300">Course locked</p>
+                  <p className="mt-1 text-sm text-slate-500">
+                    {user
+                      ? "You don't have access to this course. Contact an admin to request access."
+                      : "Sign in or create an account to request access to this course."}
+                  </p>
+                  <div className="mt-5 flex flex-wrap justify-center gap-3">
+                    {!user && (
+                      <>
+                        <Link
+                          href="/auth/login"
+                          className="rounded-lg bg-indigo-600 px-5 py-2 text-sm font-medium text-white hover:bg-indigo-500"
+                        >
+                          Sign in
+                        </Link>
+                        <Link
+                          href="/auth/signup"
+                          className="rounded-lg border border-slate-600 px-5 py-2 text-sm font-medium text-slate-300 hover:bg-slate-800"
+                        >
+                          Sign up
+                        </Link>
+                      </>
+                    )}
+                    <Link
+                      href="/videos"
+                      className="rounded-lg border border-slate-700 px-5 py-2 text-sm font-medium text-slate-400 hover:bg-slate-800"
+                    >
+                      Browse courses
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Course meta */}
+            <div className="flex items-center gap-4 rounded-xl border border-slate-700/50 bg-[#16162a] px-4 py-4 text-sm text-slate-500">
+              <Clock className="h-4 w-4 shrink-0" />
+              <span>{(video as { duration_minutes?: number | null }).duration_minutes
+                ? formatDuration((video as { duration_minutes: number }).duration_minutes)
+                : "—"}</span>
+              <Star className="h-4 w-4 fill-current text-amber-400/60 ml-auto" />
+              <span>{rating}</span>
+            </div>
+          </div>
+
+          {/* Lessons sidebar — blurred placeholder */}
+          <div className="h-fit rounded-xl border border-slate-700/50 bg-[#16162a] p-4">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="font-semibold text-slate-400">Lessons</h3>
+              <Lock className="h-4 w-4 text-slate-600" />
+            </div>
+            <div className="space-y-2 select-none">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-3 rounded-lg px-3 py-2.5 opacity-40">
+                  <div className="h-8 w-8 rounded-full bg-slate-700 shrink-0" />
+                  <div className="flex-1 space-y-1.5">
+                    <div className="h-3 rounded bg-slate-700 w-3/4" />
+                    <div className="h-2.5 rounded bg-slate-800 w-1/3" />
+                  </div>
+                </div>
+              ))}
+              <p className="pt-2 text-center text-xs text-slate-600">Unlock to see all lessons</p>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -55,50 +164,11 @@ export default async function VideoDetailPage({
   const { lesson: lessonParam } = await searchParams;
   const lessonIndex = Math.max(0, Math.min(parseInt(lessonParam ?? "0", 10) || 0, 999));
 
-  const supabase = await createClient();
-  // All courses are private: user must have explicit access (or be admin).
-  const [videoRes, profileRes, myAccessRes, lessonsRes] = await Promise.all([
-    supabase.from("video_courses").select("*").eq("id", id).single(),
-    supabase.from("profiles").select("role").eq("id", user.id).single(),
-    supabase.from("user_course_access").select("id").eq("course_id", id).eq("user_id", user.id).maybeSingle(),
-    supabase.from("course_lessons").select("id, title, youtube_url, duration_minutes, sort_order").eq("course_id", id).order("sort_order"),
-  ]);
-
-  const { data: video, error } = videoRes;
-  if (error || !video) notFound();
-
-  const profile = profileRes.data;
-  const isAdmin = profile?.role === "admin";
-  const myAccess = myAccessRes.data;
-  const canView = isAdmin || !!myAccess;
-
-  if (!canView) {
-    return (
-      <div className="p-6 lg:p-8">
-        <Link
-          href="/videos"
-          className="mb-6 inline-flex items-center gap-2 text-slate-400 hover:text-indigo-400"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Courses
-        </Link>
-        <div className="rounded-xl border border-slate-700/50 bg-[#16162a] p-8 text-center">
-          <h2 className="text-xl font-semibold text-white">Access restricted</h2>
-          <p className="mt-2 text-slate-400">
-            You don&apos;t have access to this course. Contact an admin to request access.
-          </p>
-          <Link
-            href="/videos"
-            className="mt-6 inline-block rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500"
-          >
-            Back to courses
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
-  const lessons = lessonsRes.data;
+  const { data: lessons } = await supabase
+    .from("course_lessons")
+    .select("id, title, youtube_url, duration_minutes, sort_order")
+    .eq("course_id", id)
+    .order("sort_order");
 
   const lessonList =
     lessons && lessons.length > 0
@@ -117,8 +187,6 @@ export default async function VideoDetailPage({
   const activeLesson = lessonList[currentIndex];
   const hasNext = currentIndex < lessonList.length - 1;
   const nextIndex = currentIndex + 1;
-  const difficulty = (video as { difficulty_level?: string }).difficulty_level ?? "Beginner";
-  const rating = (video as { rating?: number }).rating ?? 4.5;
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">

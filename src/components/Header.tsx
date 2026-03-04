@@ -1,60 +1,61 @@
-import Link from "next/link";
 import { Search } from "lucide-react";
-import { getCachedUser } from "@/lib/supabase/server";
 import { SidebarToggle } from "@/components/SidebarToggle";
+import { getCachedUser } from "@/lib/supabase/server";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import Link from "next/link";
 
 export default async function Header() {
   const user = await getCachedUser();
+  const initials = user?.email ? user.email.slice(0, 2).toUpperCase() : null;
 
   return (
-    <header className="sticky top-0 z-20 border-b border-slate-800 bg-[#0f0f1e]/95 backdrop-blur">
-      <div className="flex h-14 sm:h-16 items-center justify-between gap-2 px-3 sm:px-6">
-        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+    <header className="sticky top-0 z-20 ios-glass">
+      <div className="flex h-14 items-center gap-3 px-4 sm:px-5">
+
+        {/* Mobile: hamburger */}
+        <div className="lg:hidden shrink-0">
           <SidebarToggle />
-          <div className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center shrink-0 rounded-lg bg-indigo-600 text-sm sm:text-lg font-bold text-white">
-            UX
-          </div>
-          <span className="text-base sm:text-xl font-semibold text-white truncate">UX Forum</span>
         </div>
 
-        <div className="hidden sm:flex flex-1 max-w-xl items-center gap-4 px-2 lg:px-4">
-          <div className="relative flex-1 min-w-0">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500 shrink-0" />
-            <input
-              type="search"
-              placeholder="Search courses, posts..."
-              className="w-full rounded-lg border border-slate-700 bg-slate-800/50 py-2 pl-9 pr-3 text-sm text-slate-100 placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-            />
-          </div>
+        {/* iOS-style pill search bar */}
+        <div className="relative flex-1 max-w-2xl mx-auto">
+          <Search
+            className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2"
+            style={{ color: "rgba(235,235,245,0.5)" }}
+          />
+          <input
+            type="search"
+            placeholder="Search"
+            className="w-full h-9 rounded-[10px] pl-9 pr-4 text-[15px] text-white placeholder:text-[rgba(235,235,245,0.45)] outline-none ios-spring focus:ring-2 focus:ring-[var(--ios-blue)]/40"
+            style={{ background: "rgba(118,118,128,0.24)" }}
+          />
         </div>
 
-        <div className="flex items-center gap-1 sm:gap-3 shrink-0">
+        {/* Right: user avatar or sign in */}
+        <div className="shrink-0">
           {user ? (
-            <Link
-              href="/"
-              className="rounded-lg px-2 sm:px-4 py-2 text-sm font-medium text-slate-300 hover:bg-slate-800/50"
-            >
-              <span className="hidden sm:inline">Dashboard</span>
-              <span className="sm:hidden">Home</span>
-            </Link>
+            <Avatar className="h-8 w-8 cursor-pointer ios-bounce hover:opacity-80">
+              <AvatarFallback
+                className="text-xs font-bold text-white rounded-full"
+                style={{ background: "linear-gradient(135deg, var(--ios-blue), var(--ios-purple))" }}
+              >
+                {initials}
+              </AvatarFallback>
+            </Avatar>
           ) : (
-            <>
-              <Link
-                href="/auth/login"
-                className="rounded-lg bg-indigo-600 px-2 sm:px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500"
-              >
-                Login
-              </Link>
-              <Link
-                href="/auth/login?admin=1"
-                className="hidden sm:inline-flex rounded-lg border border-slate-600 px-4 py-2 text-sm font-medium text-slate-300 hover:bg-slate-800/50"
-              >
-                Admin
-              </Link>
-            </>
+            <Link
+              href="/auth/login"
+              className="text-[15px] font-medium ios-spring"
+              style={{ color: "var(--ios-blue)" }}
+            >
+              Sign In
+            </Link>
           )}
         </div>
       </div>
+
+      {/* iOS thin separator */}
+      <div className="ios-separator" />
     </header>
   );
 }

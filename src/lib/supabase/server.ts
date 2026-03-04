@@ -30,17 +30,27 @@ export async function createClient() {
   );
 }
 
-/** Cached per-request so Header, Sidebar, and page share one auth call. */
+/** Cached per-request so Header, Sidebar, and page share one auth call.
+ *  Returns null on expired / invalid refresh tokens instead of throwing. */
 export const getCachedUser = cache(async () => {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  return user;
+  try {
+    const supabase = await createClient();
+    const { data: { user }, error } = await supabase.auth.getUser();
+    if (error) return null;
+    return user;
+  } catch {
+    return null;
+  }
 });
 
 /** Cached per-request per userId so profile is fetched once. */
 export const getCachedProfile = cache(async (userId: string | undefined) => {
   if (!userId) return null;
-  const supabase = await createClient();
-  const { data } = await supabase.from("profiles").select("role").eq("id", userId).single();
-  return data;
+  try {
+    const supabase = await createClient();
+    const { data } = await supabase.from("profiles").select("role").eq("id", userId).single();
+    return data;
+  } catch {
+    return null;
+  }
 });

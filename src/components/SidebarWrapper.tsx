@@ -7,28 +7,24 @@ export function SidebarWrapper({ children }: { children: React.ReactNode }) {
   const { open, setOpen } = useSidebarOpen();
   const [mounted, setMounted] = useState(false);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  useEffect(() => { setMounted(true); }, []);
 
-  // Before mount (SSR + initial hydration), always render the closed state
-  // so server HTML and client HTML match exactly.
   const isOpen = mounted && open;
 
   return (
     <>
-      {/* Overlay — only visible on mobile when sidebar is open */}
+      {/* iOS-style dim overlay */}
       <button
         type="button"
         aria-label="Close menu"
         onClick={() => setOpen(false)}
-        className={`fixed inset-0 z-30 bg-black/60 backdrop-blur-sm transition-opacity lg:hidden ${
+        className={`fixed inset-0 z-30 bg-black/50 backdrop-blur-[2px] transition-opacity duration-300 lg:hidden ${
           isOpen ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
       />
-      {/* Sidebar: off-canvas on mobile, fixed on lg+ */}
+      {/* Sidebar drawer — fixed on lg, slide-over on mobile */}
       <div
-        className={`fixed left-0 top-0 z-40 h-screen w-64 transform transition-transform duration-200 ease-out lg:translate-x-0 ${
+        className={`fixed left-0 top-0 z-40 h-screen w-72 ios-spring lg:translate-x-0 ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
