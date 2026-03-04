@@ -197,3 +197,17 @@ export async function revokeCourseAccess(courseId: string, userId: string) {
   revalidatePath("/admin/users", "layout");
   revalidatePath("/videos");
 }
+
+/** Make course public: remove all user_course_access rows so everyone can view. */
+export async function makeCoursePublic(courseId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user?.id).single();
+  if (profile?.role !== "admin") throw new Error("Unauthorized");
+  const { error } = await supabase.from("user_course_access").delete().eq("course_id", courseId);
+  if (error) throw error;
+  revalidatePath("/admin/videos");
+  revalidatePath(`/admin/videos/${courseId}/access`);
+  revalidatePath("/admin/users", "layout");
+  revalidatePath("/videos");
+}

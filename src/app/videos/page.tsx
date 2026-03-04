@@ -70,26 +70,24 @@ export default async function VideosPage() {
 
 async function VideosContent({ userId }: { userId: string }) {
   const supabase = await createClient();
-  const [videosRes, profileRes, restrictedRes, myAccessRes] = await Promise.all([
+  // All courses are private: only show courses the user has explicit access to (or all for admins).
+  const [videosRes, profileRes, myAccessRes] = await Promise.all([
     supabase.from("video_courses").select("*").order("order_index"),
     supabase.from("profiles").select("role").eq("id", userId).single(),
-    supabase.from("user_course_access").select("course_id"),
     supabase.from("user_course_access").select("course_id").eq("user_id", userId),
   ]);
 
   const videos = videosRes.data;
   const profile = profileRes.data;
   const isAdmin = profile?.role === "admin";
-  const restrictedSet = new Set((restrictedRes.data ?? []).map((r) => r.course_id));
   const myAccessSet = new Set((myAccessRes.data ?? []).map((a) => a.course_id));
 
-  const canView = (courseId: string) =>
-    isAdmin || !restrictedSet.has(courseId) || myAccessSet.has(courseId);
+  const canView = (courseId: string) => isAdmin || myAccessSet.has(courseId);
   const visibleVideos = videos?.filter((v) => canView(v.id)) ?? [];
 
   return (
     <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {visibleVideos.length ? (
+        {visibleVideos.length > 0 ? (
           visibleVideos.map((video) => {
             const difficulty = (video as { difficulty_level?: string }).difficulty_level ?? "Beginner";
             const lessons = (video as { lessons_count?: number }).lessons_count ?? 0;
@@ -156,7 +154,7 @@ async function VideosContent({ userId }: { userId: string }) {
           <div className="col-span-full flex flex-col items-center justify-center rounded-xl border border-slate-700/50 bg-[#16162a] py-24">
             <BookOpen className="mb-4 h-16 w-16 text-slate-600" />
             <p className="text-slate-500">
-              {videos?.length ? "No courses available to you yet." : "No courses yet. Check back soon!"}
+              {videos?.length ? "You don't have access to any courses yet. Contact an admin to request access." : "No courses yet. Check back soon!"}
             </p>
           </div>
         )}

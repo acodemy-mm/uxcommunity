@@ -63,7 +63,7 @@ export default async function UserAccessPage({
           <h3 className="text-sm font-medium text-slate-300 mb-3">Courses with access</h3>
           {coursesWithAccess.length === 0 ? (
             <p className="text-slate-500 text-sm">
-              No course access yet. Grant access above or manage per-course from Videos → Access.
+              No courses granted yet. All courses are private — grant access above so this user can view them.
             </p>
           ) : (
             <ul className="space-y-2">

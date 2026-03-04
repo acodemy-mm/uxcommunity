@@ -56,10 +56,10 @@ export default async function VideoDetailPage({
   const lessonIndex = Math.max(0, Math.min(parseInt(lessonParam ?? "0", 10) || 0, 999));
 
   const supabase = await createClient();
-  const [videoRes, profileRes, courseAccessRes, myAccessRes, lessonsRes] = await Promise.all([
+  // All courses are private: user must have explicit access (or be admin).
+  const [videoRes, profileRes, myAccessRes, lessonsRes] = await Promise.all([
     supabase.from("video_courses").select("*").eq("id", id).single(),
     supabase.from("profiles").select("role").eq("id", user.id).single(),
-    supabase.from("user_course_access").select("course_id").eq("course_id", id),
     supabase.from("user_course_access").select("id").eq("course_id", id).eq("user_id", user.id).maybeSingle(),
     supabase.from("course_lessons").select("id, title, youtube_url, duration_minutes, sort_order").eq("course_id", id).order("sort_order"),
   ]);
@@ -69,10 +69,8 @@ export default async function VideoDetailPage({
 
   const profile = profileRes.data;
   const isAdmin = profile?.role === "admin";
-  const courseAccessRows = courseAccessRes.data ?? [];
-  const isRestricted = courseAccessRows.length > 0;
   const myAccess = myAccessRes.data;
-  const canView = isAdmin || !isRestricted || !!myAccess;
+  const canView = isAdmin || !!myAccess;
 
   if (!canView) {
     return (

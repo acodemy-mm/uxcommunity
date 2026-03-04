@@ -44,7 +44,7 @@ export default async function CourseAccessPage({
         <h2 className="text-lg sm:text-xl font-semibold text-slate-100">Course access</h2>
         <p className="text-slate-400 mt-1 text-sm sm:text-base truncate">{course.title}</p>
         <p className="text-slate-500 mt-1 text-xs sm:text-sm">
-          Users listed below can view this course. If no one is listed, everyone can view.
+          All courses are private. Only users listed below (and admins) can view this course.
         </p>
       </div>
 
@@ -60,7 +60,7 @@ export default async function CourseAccessPage({
         <div className="rounded-xl border border-slate-700 bg-slate-800/50 p-3 sm:p-4">
           <h3 className="text-sm font-medium text-slate-300 mb-3">Users with access</h3>
           {userIds.length === 0 ? (
-            <p className="text-slate-500 text-sm">No users assigned. Everyone can view this course.</p>
+            <p className="text-slate-500 text-sm">No users assigned yet. This course is private — no one can view it until access is granted.</p>
           ) : (
             <ul className="space-y-2">
               {userIds.map((uid) => {
