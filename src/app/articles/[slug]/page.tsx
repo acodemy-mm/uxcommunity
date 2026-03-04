@@ -1,7 +1,9 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { ArrowLeft, ThumbsUp, Bookmark, Share2 } from "lucide-react";
+import { ArrowLeft, Share2 } from "lucide-react";
+import { LikeButton } from "@/components/LikeButton";
+import { SaveButton } from "@/components/SaveButton";
 
 export const dynamic = "force-dynamic";
 
@@ -51,22 +53,46 @@ export default async function ArticlePage({
 
   if (error || !article) notFound();
 
-  const { data: images } = await supabase
-    .from("article_images")
-    .select("id, storage_path, caption, sort_order")
-    .eq("article_id", article.id)
-    .order("sort_order");
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  let authorName: string | null = null;
-  if (article.author_id) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("full_name")
-      .eq("id", article.author_id)
-      .single();
-    authorName = profile?.full_name ?? null;
-  }
+  const [imagesResult, authorResult, likeResult, saveResult] =
+    await Promise.all([
+      supabase
+        .from("article_images")
+        .select("id, storage_path, caption, sort_order")
+        .eq("article_id", article.id)
+        .order("sort_order"),
+      article.author_id
+        ? supabase
+            .from("profiles")
+            .select("full_name")
+            .eq("id", article.author_id)
+            .single()
+        : Promise.resolve({ data: null }),
+      user
+        ? supabase
+            .from("article_likes")
+            .select("id")
+            .eq("user_id", user.id)
+            .eq("article_id", article.id)
+            .maybeSingle()
+        : Promise.resolve({ data: null }),
+      user
+        ? supabase
+            .from("article_saves")
+            .select("id")
+            .eq("user_id", user.id)
+            .eq("article_id", article.id)
+            .maybeSingle()
+        : Promise.resolve({ data: null }),
+    ]);
 
+  const images = imagesResult.data;
+  const authorName = authorResult.data?.full_name ?? null;
+  const initialLiked = !!likeResult.data;
+  const initialSaved = !!saveResult.data;
   const categories = (article.categories as string[]) ?? [];
   const likesCount = article.likes_count ?? 0;
 
@@ -171,20 +197,35 @@ export default async function ArticlePage({
           {/* Engagement Footer */}
           <div className="mt-10 flex items-center justify-between border-t border-slate-700/50 pt-6">
             <div className="flex items-center gap-6">
-              <button className="flex items-center gap-2 text-slate-400 hover:text-indigo-400">
-                <ThumbsUp className="h-5 w-5" />
-                <span>{likesCount}</span>
-              </button>
-              <button className="flex items-center gap-2 text-slate-400 hover:text-indigo-400">
-                <Bookmark className="h-5 w-5" />
-                <span>Save</span>
-              </button>
+              <LikeButton
+                articleId={article.id}
+                articleSlug={slug}
+                initialLiked={initialLiked}
+                initialCount={likesCount}
+                isAuthenticated={!!user}
+              />
+              <SaveButton
+                articleId={article.id}
+                articleSlug={slug}
+                initialSaved={initialSaved}
+                isAuthenticated={!!user}
+              />
             </div>
             <button className="flex items-center gap-2 text-slate-400 hover:text-indigo-400">
               <Share2 className="h-5 w-5" />
-              <span>Share</span>
+              <span className="text-sm font-medium">Share</span>
             </button>
           </div>
+
+          {/* Login prompt for guests */}
+          {!user && (
+            <p className="mt-4 text-center text-sm text-slate-500">
+              <Link href="/auth/login" className="text-[#0A84FF] hover:underline">
+                Sign in
+              </Link>{" "}
+              to like and save articles
+            </p>
+          )}
         </div>
       </article>
     </div>

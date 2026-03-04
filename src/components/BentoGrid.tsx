@@ -118,7 +118,7 @@ export function BentoGrid({ items }: BentoGridProps) {
             return (
               <Link
                 key={item.id}
-                href={item.locked ? "/auth/login" : item.href}
+                href={item.href}
                 style={{ gridRow: `span ${span}` }}
                 className={cn(
                   "group relative flex flex-col justify-between overflow-hidden rounded-[20px] p-5 ios-bounce",
@@ -196,7 +196,7 @@ export function BentoGrid({ items }: BentoGridProps) {
 
                   {/* iOS-style frosted pill button */}
                   <div className="flex items-center gap-1 rounded-full bg-white/20 px-3 py-1.5 text-[12px] font-semibold text-white backdrop-blur-sm ios-spring group-hover:bg-white/30">
-                    {item.locked ? "Sign in" : "Open"}
+                    {item.locked ? "View course" : "Open"}
                     <ChevronRight className="h-3 w-3" />
                   </div>
                 </div>

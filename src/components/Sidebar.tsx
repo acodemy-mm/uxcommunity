@@ -77,7 +77,7 @@ export default async function Sidebar() {
 
       {/* ── Navigation ─────────────────────────── */}
       <div className="flex-1 overflow-y-auto px-4 pb-4">
-        <SidebarNav isAdmin={isAdmin} />
+        <SidebarNav isAdmin={isAdmin} isAuthenticated={!!user} />
       </div>
 
       {/* ── Bottom: sign out / admin ────────────── */}
