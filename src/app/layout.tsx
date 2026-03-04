@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
+import { SidebarOpenProvider } from "@/components/SidebarContext";
+import { SidebarWrapper } from "@/components/SidebarWrapper";
 
 export const metadata: Metadata = {
   title: "UX Forum - Articles, Courses, Podcasts & Jobs",
@@ -16,11 +18,15 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className="antialiased bg-[#0f0f1e] text-slate-100">
-        <Sidebar />
-        <div className="pl-64">
-          <Header />
-          <main className="min-h-screen">{children}</main>
-        </div>
+        <SidebarOpenProvider>
+          <SidebarWrapper>
+            <Sidebar />
+          </SidebarWrapper>
+          <div className="min-h-screen pl-0 lg:pl-64">
+            <Header />
+            <main className="min-h-screen">{children}</main>
+          </div>
+        </SidebarOpenProvider>
       </body>
     </html>
   );

@@ -11,6 +11,7 @@ import {
   Briefcase,
   ChevronRight,
 } from "lucide-react";
+import { useSidebarOpen } from "./SidebarContext";
 
 const navItems = [
   { href: "/", label: "Home", icon: Home },
@@ -23,6 +24,7 @@ const navItems = [
 
 export function SidebarNav() {
   const pathname = usePathname();
+  const { setOpen } = useSidebarOpen();
 
   return (
     <nav className="space-y-1 px-3">
@@ -36,6 +38,7 @@ export function SidebarNav() {
           <Link
             key={item.href}
             href={item.href}
+            onClick={() => setOpen(false)}
             className={`group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors ${
               isActive
                 ? "bg-indigo-500/20 text-indigo-300"

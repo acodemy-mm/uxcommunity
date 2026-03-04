@@ -12,12 +12,12 @@ export default async function HomePage() {
   ]);
 
   return (
-    <div className="max-w-6xl mx-auto p-6 lg:p-8">
-      <section className="text-center mb-16">
-        <h1 className="text-4xl md:text-5xl font-bold text-slate-100 mb-4">
+    <div className="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8">
+      <section className="text-center mb-10 sm:mb-16">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-100 mb-3 sm:mb-4">
           UX Community
         </h1>
-        <p className="text-xl text-slate-400 max-w-2xl mx-auto">
+        <p className="text-base sm:text-xl text-slate-400 max-w-2xl mx-auto px-1">
           Your hub for UX articles, video courses, podcasts, job opportunities, and design challenges.
         </p>
       </section>

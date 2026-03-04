@@ -123,9 +123,9 @@ export default async function VideoDetailPage({
   const rating = (video as { rating?: number }).rating ?? 4.5;
 
   return (
-    <div className="p-6 lg:p-8">
+    <div className="p-4 sm:p-6 lg:p-8">
       {/* Header: back + difficulty + title | rating */}
-      <div className="mb-8 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+      <div className="mb-6 sm:mb-8 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <Link
             href="/videos"
@@ -152,16 +152,16 @@ export default async function VideoDetailPage({
         {/* Left: Video player */}
         <div className="space-y-4">
           <div className="overflow-hidden rounded-xl border border-slate-700/50 bg-[#16162a]">
-            <div className="flex items-center justify-between border-b border-slate-700/50 px-4 py-3">
-              <h2 className="font-semibold text-white">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-700/50 px-3 sm:px-4 py-3">
+              <h2 className="font-semibold text-white text-sm sm:text-base line-clamp-2">
                 {activeLesson.title}
               </h2>
-              <div className="flex items-center gap-4 text-sm text-slate-400">
-                <button className="flex items-center gap-1 hover:text-indigo-400">
+              <div className="flex items-center gap-3 text-sm text-slate-400 shrink-0">
+                <button className="flex items-center gap-1 hover:text-indigo-400" type="button">
                   <BookmarkPlus className="h-4 w-4" />
-                  Watch later
+                  <span className="hidden sm:inline">Watch later</span>
                 </button>
-                <button className="flex items-center gap-1 hover:text-indigo-400">
+                <button className="flex items-center gap-1 hover:text-indigo-400" type="button">
                   <Share2 className="h-4 w-4" />
                   Share
                 </button>
@@ -179,11 +179,11 @@ export default async function VideoDetailPage({
           </div>
 
           {/* Video details + Mark complete */}
-          <div className="flex items-center justify-between rounded-xl border border-slate-700/50 bg-[#16162a] px-4 py-4">
-            <div>
-              <h3 className="font-semibold text-white">{activeLesson.title}</h3>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-xl border border-slate-700/50 bg-[#16162a] px-3 sm:px-4 py-4">
+            <div className="min-w-0">
+              <h3 className="font-semibold text-white text-sm sm:text-base line-clamp-2">{activeLesson.title}</h3>
               <div className="mt-1 flex items-center gap-2 text-sm text-slate-500">
-                <Clock className="h-4 w-4" />
+                <Clock className="h-4 w-4 shrink-0" />
                 {formatDuration(activeLesson.duration_minutes)}
               </div>
             </div>
@@ -214,7 +214,7 @@ export default async function VideoDetailPage({
         </div>
 
         {/* Right: Lessons sidebar */}
-        <div className="h-fit rounded-xl border border-slate-700/50 bg-[#16162a] p-4 lg:sticky lg:top-24">
+        <div className="h-fit rounded-xl border border-slate-700/50 bg-[#16162a] p-3 sm:p-4 lg:sticky lg:top-24">
           <div className="mb-4 flex items-center justify-between">
             <h3 className="font-semibold text-white">Lessons</h3>
             <span className="text-sm text-slate-500">

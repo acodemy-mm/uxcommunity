@@ -182,6 +182,7 @@ export async function grantCourseAccess(courseId: string, userId: string) {
   });
   if (error) throw error;
   revalidatePath("/admin/videos");
+  revalidatePath("/admin/users", "layout");
   revalidatePath("/videos");
 }
 
@@ -193,5 +194,6 @@ export async function revokeCourseAccess(courseId: string, userId: string) {
   const { error } = await supabase.from("user_course_access").delete().eq("course_id", courseId).eq("user_id", userId);
   if (error) throw error;
   revalidatePath("/admin/videos");
+  revalidatePath("/admin/users", "layout");
   revalidatePath("/videos");
 }

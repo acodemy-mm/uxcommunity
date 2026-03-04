@@ -1,14 +1,9 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { updateSession } from "@/lib/supabase/middleware";
 
+// Proxy only passes the request through. Session refresh runs in server components and auth/callback
+// to avoid "Error evaluating Node.js code" when Supabase SSR is bundled for Edge.
 export async function proxy(request: NextRequest) {
-  try {
-    return await updateSession(request);
-  } catch {
-    // If session refresh fails (e.g. missing env at edge), continue to the app.
-    // The route handler will still run; auth may just be stale until env is set.
-    return NextResponse.next({ request });
-  }
+  return NextResponse.next({ request });
 }
 
 export const config = {

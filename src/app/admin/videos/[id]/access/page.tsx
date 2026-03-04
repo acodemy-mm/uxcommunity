@@ -33,23 +33,23 @@ export default async function CourseAccessPage({
   const availableProfiles = allProfiles.filter((p) => !alreadyHaveAccess.has(p.id));
 
   return (
-    <div>
+    <div className="space-y-4 sm:space-y-6">
       <Link
         href="/admin/videos"
-        className="text-indigo-400 hover:underline mb-6 inline-block"
+        className="text-indigo-400 hover:underline mb-4 sm:mb-6 inline-block text-sm sm:text-base"
       >
         ← Back to courses
       </Link>
-      <div className="mb-6">
-        <h2 className="text-xl font-semibold text-slate-100">Course access</h2>
-        <p className="text-slate-400 mt-1">{course.title}</p>
-        <p className="text-sm text-slate-500 mt-1">
-          Users listed below can view this course. If no one is listed, everyone can view. Add at least one user to restrict access to only those users.
+      <div className="mb-4 sm:mb-6">
+        <h2 className="text-lg sm:text-xl font-semibold text-slate-100">Course access</h2>
+        <p className="text-slate-400 mt-1 text-sm sm:text-base truncate">{course.title}</p>
+        <p className="text-slate-500 mt-1 text-xs sm:text-sm">
+          Users listed below can view this course. If no one is listed, everyone can view.
         </p>
       </div>
 
-      <div className="space-y-6 max-w-2xl">
-        <div className="rounded-xl border border-slate-700 bg-slate-800/50 p-4">
+      <div className="space-y-4 sm:space-y-6 max-w-2xl">
+        <div className="rounded-xl border border-slate-700 bg-slate-800/50 p-3 sm:p-4">
           <h3 className="text-sm font-medium text-slate-300 mb-3">Grant access</h3>
           <GrantAccessForm
             courseId={id}
@@ -57,7 +57,7 @@ export default async function CourseAccessPage({
           />
         </div>
 
-        <div className="rounded-xl border border-slate-700 bg-slate-800/50 p-4">
+        <div className="rounded-xl border border-slate-700 bg-slate-800/50 p-3 sm:p-4">
           <h3 className="text-sm font-medium text-slate-300 mb-3">Users with access</h3>
           {userIds.length === 0 ? (
             <p className="text-slate-500 text-sm">No users assigned. Everyone can view this course.</p>
@@ -68,12 +68,12 @@ export default async function CourseAccessPage({
                 return (
                   <li
                     key={uid}
-                    className="flex items-center justify-between rounded-lg bg-slate-900/50 px-3 py-2"
+                    className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 rounded-lg bg-slate-900/50 px-3 py-2"
                   >
-                    <span className="text-slate-200">
+                    <span className="text-slate-200 text-sm sm:text-base min-w-0 truncate">
                       {p?.full_name || p?.email || uid}
                       {p?.email && p?.full_name && (
-                        <span className="text-slate-500 text-sm ml-2">{p.email}</span>
+                        <span className="text-slate-500 text-xs sm:text-sm ml-2">{p.email}</span>
                       )}
                     </span>
                     <RevokeAccessButton courseId={id} userId={uid} />

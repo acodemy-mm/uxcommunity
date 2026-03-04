@@ -41,8 +41,8 @@ export function GrantAccessForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-wrap items-end gap-3">
-      <div className="min-w-[200px]">
+    <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-end gap-3">
+      <div className="min-w-0 flex-1 sm:min-w-[200px]">
         <label htmlFor="user" className="block text-xs text-slate-500 mb-1">
           User
         </label>

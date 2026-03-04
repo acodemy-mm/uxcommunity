@@ -9,7 +9,7 @@ export default async function Sidebar() {
   const isAdmin = profile?.role === "admin";
 
   return (
-    <aside className="fixed left-0 top-0 z-40 h-screen w-64 border-r border-slate-800 bg-[#12122a]">
+    <aside className="h-screen w-64 border-r border-slate-800 bg-[#12122a]">
       <div className="flex h-full flex-col">
         <div className="flex-1 overflow-y-auto py-6">
           <SidebarNav />
