@@ -126,7 +126,6 @@ export default function ForgotPasswordPage() {
                 style={{
                   background: "#2C2C2E",
                   border: "none",
-                  focusRingColor: "#0A84FF",
                 }}
                 onFocus={(e) => (e.target.style.outline = "2px solid #0A84FF")}
                 onBlur={(e) => (e.target.style.outline = "none")}

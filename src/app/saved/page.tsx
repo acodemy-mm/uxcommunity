@@ -54,7 +54,7 @@ export default async function SavedPage() {
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });
 
-  const savedArticles = (saves ?? []) as SavedRow[];
+  const savedArticles = (saves ?? []) as unknown as SavedRow[];
 
   return (
     <div className="p-6 lg:p-8">

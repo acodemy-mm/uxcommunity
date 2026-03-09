@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { Lock, Eye, EyeOff, CheckCircle } from "lucide-react";
 
@@ -12,7 +13,14 @@ export default function ResetPasswordPage() {
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hasSession, setHasSession] = useState<boolean | null>(null);
   const router = useRouter();
+
+  useEffect(() => {
+    createClient()
+      .auth.getSession()
+      .then(({ data: { session } }) => setHasSession(!!session));
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -39,6 +47,40 @@ export default function ResetPasswordPage() {
 
     setDone(true);
     setTimeout(() => router.push("/"), 2500);
+  }
+
+  if (hasSession === false) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black px-4">
+        <div
+          className="w-full max-w-md rounded-2xl p-8 text-center"
+          style={{ background: "#1C1C1E" }}
+        >
+          <div
+            className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl"
+            style={{ background: "rgba(255,149,0,0.15)" }}
+          >
+            <Lock className="h-8 w-8" style={{ color: "#FF9500" }} />
+          </div>
+          <h2 className="mb-2 text-[22px] font-bold text-white">Reset link invalid or expired</h2>
+          <p className="mb-6 text-[15px]" style={{ color: "rgba(235,235,245,0.6)" }}>
+            Request a new password reset link and use it in this browser.
+          </p>
+          <Link
+            href="/auth/forgot-password"
+            className="inline-block w-full rounded-xl py-3 text-[15px] font-semibold text-white"
+            style={{ background: "#0A84FF" }}
+          >
+            Send new reset link
+          </Link>
+          <p className="mt-4">
+            <Link href="/auth/login" className="text-[15px]" style={{ color: "rgba(235,235,245,0.6)" }}>
+              Back to sign in
+            </Link>
+          </p>
+        </div>
+      </div>
+    );
   }
 
   if (done) {
