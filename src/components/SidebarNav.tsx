@@ -23,7 +23,8 @@ const NAV_ITEMS: NavItem[] = [
 ];
 
 const MY_ITEMS: NavItem[] = [
-  { href: "/saved", label: "Saved", emoji: "🔖", color: "#0A84FF" },
+  { href: "/saved",   label: "Saved",    emoji: "🔖", color: "#0A84FF" },
+  { href: "/profile", label: "Settings", emoji: "⚙️", color: "#636366" },
 ];
 
 export function SidebarNav({

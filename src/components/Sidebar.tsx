@@ -9,10 +9,13 @@ export default async function Sidebar() {
   const profile = await getCachedProfile(user?.id);
   const isAdmin = profile?.role === "admin";
 
-  const displayName = user?.email
+  const emailFallback = user?.email
     ? user.email.split("@")[0].replace(/[._-]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
     : null;
-  const initials = user?.email ? user.email.slice(0, 2).toUpperCase() : "UX";
+  const displayName = profile?.full_name?.trim() || emailFallback;
+  const initials = profile?.full_name?.trim()
+    ? profile.full_name.trim().split(/\s+/).map((w: string) => w[0]).join("").slice(0, 2).toUpperCase()
+    : user?.email?.slice(0, 2).toUpperCase() ?? "UX";
 
   return (
     <aside className="flex h-screen w-72 flex-col ios-glass-thick select-none overflow-hidden">
