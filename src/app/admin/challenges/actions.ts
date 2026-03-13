@@ -12,6 +12,7 @@ export async function createChallenge(formData: FormData) {
   const prize = (formData.get("prize") as string) || null;
   const start_date = formData.get("start_date") as string;
   const end_date = formData.get("end_date") as string;
+  const featured = formData.get("featured") === "on";
 
   const { error } = await supabase.from("challenges").insert({
     title,
@@ -20,6 +21,7 @@ export async function createChallenge(formData: FormData) {
     prize,
     start_date,
     end_date,
+    featured,
   });
 
   if (error) throw error;
@@ -37,10 +39,11 @@ export async function updateChallenge(id: string, formData: FormData) {
   const prize = (formData.get("prize") as string) || null;
   const start_date = formData.get("start_date") as string;
   const end_date = formData.get("end_date") as string;
+  const featured = formData.get("featured") === "on";
 
   const { error } = await supabase
     .from("challenges")
-    .update({ title, description, rules, prize, start_date, end_date, updated_at: new Date().toISOString() })
+    .update({ title, description, rules, prize, start_date, end_date, featured, updated_at: new Date().toISOString() })
     .eq("id", id);
 
   if (error) throw error;

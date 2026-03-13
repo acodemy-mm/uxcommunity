@@ -53,6 +53,7 @@ export default async function EditVideoPage({ params }: { params: Promise<{ id: 
         defaultDifficulty={(video as { difficulty_level?: string }).difficulty_level || ""}
         defaultRating={(video as { rating?: number }).rating != null ? String((video as { rating?: number }).rating) : ""}
         defaultLessons={defaultLessons}
+        defaultFeatured={(video as { featured?: boolean }).featured ?? false}
       />
     </div>
   );

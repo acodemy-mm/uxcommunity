@@ -11,6 +11,7 @@ export async function createPodcast(formData: FormData) {
   const episode_url = formData.get("episode_url") as string;
   const cover_image = (formData.get("cover_image") as string) || null;
   const duration_minutes = formData.get("duration_minutes") ? parseInt(formData.get("duration_minutes") as string) : null;
+  const featured = formData.get("featured") === "on";
 
   const { error } = await supabase.from("podcasts").insert({
     title,
@@ -18,6 +19,7 @@ export async function createPodcast(formData: FormData) {
     episode_url,
     cover_image,
     duration_minutes,
+    featured,
   });
 
   if (error) throw error;
@@ -34,10 +36,11 @@ export async function updatePodcast(id: string, formData: FormData) {
   const episode_url = formData.get("episode_url") as string;
   const cover_image = (formData.get("cover_image") as string) || null;
   const duration_minutes = formData.get("duration_minutes") ? parseInt(formData.get("duration_minutes") as string) : null;
+  const featured = formData.get("featured") === "on";
 
   const { error } = await supabase
     .from("podcasts")
-    .update({ title, description: description || null, episode_url, cover_image, duration_minutes, updated_at: new Date().toISOString() })
+    .update({ title, description: description || null, episode_url, cover_image, duration_minutes, featured, updated_at: new Date().toISOString() })
     .eq("id", id);
 
   if (error) throw error;

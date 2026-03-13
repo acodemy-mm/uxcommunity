@@ -17,16 +17,9 @@ export async function createArticle(formData: FormData): Promise<ActionResult> {
     const slug = formData.get("slug") as string;
     const excerpt = formData.get("excerpt") as string;
     const content = formData.get("content") as string;
-    const cover_image = (formData.get("cover_image") as string) || null;
+    const author_name = (formData.get("author_name") as string) || null;
     const published = formData.get("published") === "on";
-    const categories = (formData.get("categories") as string)
-      ?.split(",")
-      .map((c) => c.trim())
-      .filter(Boolean) ?? [];
-    const tags = (formData.get("tags") as string)
-      ?.split(",")
-      .map((t) => t.trim())
-      .filter(Boolean) ?? [];
+    const categories = (formData.getAll("categories") as string[]) ?? [];
     const read_time_minutes = formData.get("read_time_minutes")
       ? parseInt(formData.get("read_time_minutes") as string)
       : null;
@@ -35,6 +28,20 @@ export async function createArticle(formData: FormData): Promise<ActionResult> {
     if (!title?.trim()) return { success: false, error: "Title is required." };
     if (!slug?.trim()) return { success: false, error: "Slug is required." };
     if (!content?.trim()) return { success: false, error: "Content is required." };
+
+    // Cover image upload
+    let cover_image: string | null = null;
+    const coverFile = formData.get("cover_image_file") as File | null;
+    if (coverFile && coverFile.size > 0) {
+      const ext = coverFile.name.split(".").pop() || "jpg";
+      const path = `covers/${crypto.randomUUID()}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from("article-images")
+        .upload(path, coverFile, { contentType: coverFile.type });
+      if (!uploadError) {
+        cover_image = path;
+      }
+    }
 
     const { data: article, error } = await supabase
       .from("articles")
@@ -45,9 +52,9 @@ export async function createArticle(formData: FormData): Promise<ActionResult> {
         content,
         cover_image,
         author_id: user.id,
+        author_name,
         published,
         categories,
-        tags,
         read_time_minutes,
         featured,
       })
@@ -111,16 +118,9 @@ export async function updateArticle(
     const slug = formData.get("slug") as string;
     const excerpt = formData.get("excerpt") as string;
     const content = formData.get("content") as string;
-    const cover_image = (formData.get("cover_image") as string) || null;
+    const author_name = (formData.get("author_name") as string) || null;
     const published = formData.get("published") === "on";
-    const categories = (formData.get("categories") as string)
-      ?.split(",")
-      .map((c) => c.trim())
-      .filter(Boolean) ?? [];
-    const tags = (formData.get("tags") as string)
-      ?.split(",")
-      .map((t) => t.trim())
-      .filter(Boolean) ?? [];
+    const categories = (formData.getAll("categories") as string[]) ?? [];
     const read_time_minutes = formData.get("read_time_minutes")
       ? parseInt(formData.get("read_time_minutes") as string)
       : null;
@@ -130,6 +130,21 @@ export async function updateArticle(
     if (!slug?.trim()) return { success: false, error: "Slug is required." };
     if (!content?.trim()) return { success: false, error: "Content is required." };
 
+    // Cover image upload / retain existing
+    let cover_image =
+      ((formData.get("existing_cover_image") as string) || "").trim() || null;
+    const coverFile = formData.get("cover_image_file") as File | null;
+    if (coverFile && coverFile.size > 0) {
+      const ext = coverFile.name.split(".").pop() || "jpg";
+      const path = `covers/${crypto.randomUUID()}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from("article-images")
+        .upload(path, coverFile, { contentType: coverFile.type });
+      if (!uploadError) {
+        cover_image = path;
+      }
+    }
+
     const { error } = await supabase
       .from("articles")
       .update({
@@ -138,9 +153,9 @@ export async function updateArticle(
         excerpt: excerpt || null,
         content,
         cover_image,
+        author_name,
         published,
         categories,
-        tags,
         read_time_minutes,
         featured,
         updated_at: new Date().toISOString(),

@@ -108,6 +108,18 @@ export default function NewJobPage() {
           />
         </div>
 
+        <div className="flex items-center gap-2">
+          <input
+            id="featured"
+            name="featured"
+            type="checkbox"
+            className="rounded border-slate-600"
+          />
+          <label htmlFor="featured" className="text-sm font-medium text-slate-300">
+            Show on home (featured)
+          </label>
+        </div>
+
         <div className="flex gap-4">
           <button
             type="submit"

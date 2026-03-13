@@ -8,14 +8,31 @@ export default async function HomePage() {
   const isAdmin = profile?.role === "admin";
 
   const [articlesRes, videosRes, challengesRes, jobsRes] = await Promise.all([
-    supabase.from("articles").select("id, title, slug, excerpt, created_at")
-      .eq("published", true).order("created_at", { ascending: false }).limit(6),
-    supabase.from("video_courses").select("id, title, description, thumbnail, duration_minutes, difficulty_level")
-      .order("order_index").limit(6),
-    supabase.from("challenges").select("id, title, start_date, end_date")
-      .order("end_date", { ascending: false }).limit(4),
-    supabase.from("job_posts").select("id, title, company, location, created_at")
-      .order("created_at", { ascending: false }).limit(4),
+    supabase
+      .from("articles")
+      .select("id, title, slug, excerpt, created_at")
+      .eq("published", true)
+      .eq("featured", true)
+      .order("created_at", { ascending: false })
+      .limit(6),
+    supabase
+      .from("video_courses")
+      .select("id, title, description, thumbnail, duration_minutes, difficulty_level")
+      .eq("featured", true)
+      .order("order_index")
+      .limit(6),
+    supabase
+      .from("challenges")
+      .select("id, title, start_date, end_date")
+      .eq("featured", true)
+      .order("end_date", { ascending: false })
+      .limit(4),
+    supabase
+      .from("job_posts")
+      .select("id, title, company, location, created_at")
+      .eq("featured", true)
+      .order("created_at", { ascending: false })
+      .limit(4),
   ]);
 
   let myAccessSet = new Set<string>();

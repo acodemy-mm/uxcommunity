@@ -44,6 +44,7 @@ export async function createVideo(formData: FormData) {
   const order_index = parseInt((formData.get("order_index") as string) || "0", 10) || 0;
   const difficulty_level = (formData.get("difficulty_level") as string) || null;
   const rating = formData.get("rating") ? parseFloat(formData.get("rating") as string) : null;
+  const featured = formData.get("featured") === "on";
 
   const lessons = parseLessons(formData);
   if (lessons.length === 0) {
@@ -64,6 +65,7 @@ export async function createVideo(formData: FormData) {
       difficulty_level,
       lessons_count: lessons.length,
       rating,
+      featured,
     })
     .select("id")
     .single();
@@ -103,6 +105,7 @@ export async function updateVideo(id: string, formData: FormData) {
   const order_index = parseInt((formData.get("order_index") as string) || "0", 10) || 0;
   const difficulty_level = (formData.get("difficulty_level") as string) || null;
   const rating = formData.get("rating") ? parseFloat(formData.get("rating") as string) : null;
+  const featured = formData.get("featured") === "on";
 
   const lessons = parseLessons(formData);
   if (lessons.length === 0) {
@@ -132,6 +135,7 @@ export async function updateVideo(id: string, formData: FormData) {
     difficulty_level,
     lessons_count: lessons.length,
     rating,
+    featured,
     updated_at: new Date().toISOString(),
   };
   if (thumbnail !== undefined) updatePayload.thumbnail = thumbnail;

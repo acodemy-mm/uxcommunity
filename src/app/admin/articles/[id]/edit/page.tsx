@@ -42,10 +42,10 @@ export default async function EditArticlePage({
           excerpt: article.excerpt || "",
           content: article.content,
           cover_image: article.cover_image || "",
+          author_name: (article as any).author_name || "",
           categories: Array.isArray(article.categories)
-            ? article.categories.join(", ")
-            : "",
-          tags: Array.isArray(article.tags) ? article.tags.join(", ") : "",
+            ? article.categories
+            : [],
           read_time_minutes: article.read_time_minutes || "",
           published: article.published,
           featured: article.featured,

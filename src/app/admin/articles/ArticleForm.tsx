@@ -13,8 +13,8 @@ interface ArticleFormProps {
     excerpt: string;
     content: string;
     cover_image: string;
-    categories: string;
-    tags: string;
+    author_name?: string;
+    categories: string[];
     read_time_minutes: number | string;
     published: boolean;
     featured: boolean;
@@ -130,13 +130,43 @@ export function ArticleForm({
             htmlFor="cover_image"
             className="block text-sm font-medium text-slate-300 mb-2"
           >
-            Cover Image URL
+            Cover Image
           </label>
+          {defaultValues?.cover_image && (
+            <p className="mb-2 text-xs text-slate-400">
+              Current cover path: {defaultValues.cover_image}
+            </p>
+          )}
+          <input
+            type="hidden"
+            name="existing_cover_image"
+            value={defaultValues?.cover_image ?? ""}
+          />
           <input
             id="cover_image"
-            name="cover_image"
-            type="url"
-            defaultValue={defaultValues?.cover_image}
+            name="cover_image_file"
+            type="file"
+            accept="image/png,image/jpeg,image/gif,image/webp"
+            className="w-full rounded-lg border border-slate-600 bg-slate-900 px-4 py-2 text-sm text-slate-300 file:mr-4 file:rounded file:border-0 file:bg-indigo-600 file:px-4 file:py-2 file:text-white"
+          />
+          <p className="mt-1 text-xs text-slate-500">
+            Recommended size 1200×630px (JPEG or PNG).
+          </p>
+        </div>
+
+        <div>
+          <label
+            htmlFor="author_name"
+            className="block text-sm font-medium text-slate-300 mb-2"
+          >
+            Author name (display)
+          </label>
+          <input
+            id="author_name"
+            name="author_name"
+            type="text"
+            defaultValue={defaultValues?.author_name}
+            placeholder="e.g. Aye Aye or Team UXcellent"
             className="w-full px-4 py-2 rounded-lg border border-slate-600 bg-slate-900 text-slate-100 focus:ring-2 focus:ring-indigo-500"
           />
         </div>
@@ -173,37 +203,33 @@ export function ArticleForm({
         </div>
 
         <div>
-          <label
-            htmlFor="categories"
-            className="block text-sm font-medium text-slate-300 mb-2"
-          >
-            Categories (comma-separated)
+          <label className="block text-sm font-medium text-slate-300 mb-2">
+            Categories
           </label>
-          <input
-            id="categories"
-            name="categories"
-            type="text"
-            defaultValue={defaultValues?.categories}
-            placeholder="UX Research, Career, Case Study"
-            className="w-full px-4 py-2 rounded-lg border border-slate-600 bg-slate-900 text-slate-100 focus:ring-2 focus:ring-indigo-500"
-          />
-        </div>
-
-        <div>
-          <label
-            htmlFor="tags"
-            className="block text-sm font-medium text-slate-300 mb-2"
-          >
-            Tags (comma-separated)
-          </label>
-          <input
-            id="tags"
-            name="tags"
-            type="text"
-            defaultValue={defaultValues?.tags}
-            placeholder="Research board, Wireframe, Prototype"
-            className="w-full px-4 py-2 rounded-lg border border-slate-600 bg-slate-900 text-slate-100 focus:ring-2 focus:ring-indigo-500"
-          />
+          <div className="flex flex-wrap gap-2">
+            {[
+              "UX Research",
+              "UI Design",
+              "Design Systems",
+              "Career",
+              "Accessibility",
+              "Case Study",
+            ].map((cat) => (
+              <label
+                key={cat}
+                className="flex items-center gap-2 rounded-full border border-slate-600 bg-slate-900 px-3 py-1 text-xs text-slate-100"
+              >
+                <input
+                  type="checkbox"
+                  name="categories"
+                  value={cat}
+                  defaultChecked={defaultValues?.categories?.includes(cat)}
+                  className="h-3 w-3 rounded border-slate-600"
+                />
+                <span>{cat}</span>
+              </label>
+            ))}
+          </div>
         </div>
 
         <div>

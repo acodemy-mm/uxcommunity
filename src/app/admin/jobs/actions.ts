@@ -13,6 +13,7 @@ export async function createJob(formData: FormData) {
   const job_type = formData.get("job_type") as string;
   const salary_range = (formData.get("salary_range") as string) || null;
   const apply_url = (formData.get("apply_url") as string) || null;
+  const featured = formData.get("featured") === "on";
 
   const { error } = await supabase.from("job_posts").insert({
     title,
@@ -22,6 +23,7 @@ export async function createJob(formData: FormData) {
     job_type,
     salary_range,
     apply_url,
+    featured,
   });
 
   if (error) throw error;
@@ -40,10 +42,11 @@ export async function updateJob(id: string, formData: FormData) {
   const job_type = formData.get("job_type") as string;
   const salary_range = (formData.get("salary_range") as string) || null;
   const apply_url = (formData.get("apply_url") as string) || null;
+  const featured = formData.get("featured") === "on";
 
   const { error } = await supabase
     .from("job_posts")
-    .update({ title, company, description, location, job_type, salary_range, apply_url, updated_at: new Date().toISOString() })
+    .update({ title, company, description, location, job_type, salary_range, apply_url, featured, updated_at: new Date().toISOString() })
     .eq("id", id);
 
   if (error) throw error;

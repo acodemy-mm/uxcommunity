@@ -69,8 +69,8 @@ export default async function ArticlesPage({
       comments_count,
       featured,
       categories,
-      tags,
-      author_id
+      author_id,
+      author_name
     `)
     .eq("published", true)
     .order("created_at", { ascending: false });
@@ -141,11 +141,13 @@ export default async function ArticlesPage({
       <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {articles?.length ? (
           articles.map((article, index) => {
-            const authorName = article.author_id
-              ? profileMap.get(article.author_id) ?? null
-              : null;
+            const authorName =
+              (article as any).author_name && (article as any).author_name.trim()
+                ? (article as any).author_name
+                : article.author_id
+                ? profileMap.get(article.author_id) ?? null
+                : null;
             const categories = (article.categories as string[]) ?? [];
-            const tags = (article.tags as string[]) ?? [];
             const gradient =
               CARD_GRADIENTS[index % CARD_GRADIENTS.length];
 
@@ -198,18 +200,6 @@ export default async function ArticlesPage({
                     <p className="mb-3 line-clamp-2 text-sm text-slate-400">
                       {article.excerpt}
                     </p>
-                  )}
-                  {tags.length > 0 && (
-                    <div className="mb-3 flex flex-wrap gap-1.5">
-                      {tags.slice(0, 3).map((tag) => (
-                        <span
-                          key={tag}
-                          className="rounded bg-slate-700/50 px-2 py-0.5 text-xs text-slate-300"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
                   )}
                   {categories.length > 0 && (
                     <div className="mb-4 flex flex-wrap gap-1.5">

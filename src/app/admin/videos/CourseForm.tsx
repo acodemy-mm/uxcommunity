@@ -23,6 +23,7 @@ interface CourseFormProps {
   defaultDifficulty?: string;
   defaultRating?: string;
   defaultLessons?: { title: string; youtube_url: string; duration_minutes: number | null }[];
+  defaultFeatured?: boolean;
 }
 
 export function CourseForm({
@@ -35,6 +36,7 @@ export function CourseForm({
   defaultDifficulty = "",
   defaultRating = "",
   defaultLessons = [],
+  defaultFeatured = false,
 }: CourseFormProps) {
   const [lessons, setLessons] = useState<LessonRow[]>(
     defaultLessons.length > 0
@@ -253,6 +255,18 @@ export function CourseForm({
             <option value="Intermediate">Intermediate</option>
             <option value="Advanced">Advanced</option>
           </select>
+        </div>
+        <div className="flex items-center gap-2">
+          <input
+            id="featured"
+            name="featured"
+            type="checkbox"
+            defaultChecked={defaultFeatured}
+            className="rounded border-slate-600"
+          />
+          <label htmlFor="featured" className="text-sm font-medium text-slate-300">
+            Show on home (featured)
+          </label>
         </div>
         <div>
           <label htmlFor="rating" className="block text-sm font-medium text-slate-300 mb-2">
