@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Heart } from "lucide-react";
-import { toggleLike } from "@/app/articles/actions";
+import { toggleLike } from "@/app/(main)/articles/actions";
 
 interface LikeButtonProps {
   articleId: string;

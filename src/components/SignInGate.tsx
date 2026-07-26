@@ -21,12 +21,6 @@ export function SignInGate({ title, description }: SignInGateProps) {
         >
           Sign in
         </Link>
-        <Link
-          href="/auth/signup"
-          className="rounded-lg border border-slate-600 px-5 py-2.5 text-sm font-medium text-slate-300 hover:bg-slate-800/50"
-        >
-          Sign up
-        </Link>
       </div>
     </div>
   );

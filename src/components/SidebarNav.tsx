@@ -20,6 +20,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/podcasts",   label: "Podcasts",   emoji: "🎧", color: "#FF9F0A" },
   { href: "/challenges", label: "Challenges", emoji: "🏆", color: "#30D158" },
   { href: "/jobs",       label: "Job Board",  emoji: "💼", color: "#40CBE0" },
+  { href: "/enroll",     label: "Enroll",     emoji: "📋", color: "#64D2FF" },
 ];
 
 const MY_ITEMS: NavItem[] = [

@@ -9,11 +9,14 @@ A web app for UX professionals featuring articles, video courses, podcasts, job 
 - **Podcasts** - Episode links (Spotify, Apple, etc.)
 - **Job Posts** - UX/UI design job listings
 - **Challenges** - Design challenges with dates and prizes
+- **Enrollment** - Multi-step student apply form with cohort management
 
 ## Roles
 
-- **User** - Browse all content, sign up/sign in
-- **Admin** - Full CRUD for all content types via Admin Panel
+- **User** - Sign in (invite-only), browse content, change password in Profile
+- **Admin** - Full Admin Panel: users, courses, enrollments, cohorts, and content CRUD
+
+Accounts are **invite-only**. Public `/auth/signup` is disabled; admins create users under **Admin → Users → Create user**.
 
 ## Setup
 
@@ -26,36 +29,57 @@ npm install
 ### 2. Connect Supabase
 
 1. Create a project at [supabase.com](https://supabase.com)
-2. Copy `.env.example` to `.env.local`
-3. Add your Supabase URL and anon key from Project Settings → API
-
-```bash
-cp .env.example .env.local
-# Edit .env.local with your Supabase credentials
-```
+2. Create `.env.local` with your project keys from **Project Settings → API**
 
 ```env
 NEXT_PUBLIC_SUPABASE_URL=your_project_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 ```
 
-> **Note:** The app requires these env vars to build and run. Add them before `npm run dev` or `npm run build`.
+`SUPABASE_SERVICE_ROLE_KEY` is required for Admin **Create user** and **Remove user**.  
+**Do not** prefix it with `NEXT_PUBLIC_` — that would expose the service role key to the browser.
 
-### 3. Run database migration
+> **Note:** The app requires the public Supabase env vars to build and run. Add them before `npm run dev` or `npm run build`.
 
-In your Supabase project, go to **SQL Editor** and run the contents of:
+### 3. Run database migrations
 
+In your Supabase project, go to **SQL Editor** and run the SQL files under `supabase/migrations/` in order (at least through the enrollment migrations you need).
+
+### 4. Disable email confirmation (required for invite-only login)
+
+In Supabase Dashboard:
+
+1. **Authentication → Providers → Email** → turn **Confirm email** OFF  
+2. In **SQL Editor**, confirm any existing unconfirmed users:
+
+```sql
+UPDATE auth.users
+SET
+  email_confirmed_at = COALESCE(email_confirmed_at, NOW()),
+  confirmed_at = COALESCE(confirmed_at, NOW())
+WHERE email_confirmed_at IS NULL;
 ```
-supabase/migrations/001_initial_schema.sql
+
+(Or run [`supabase/migrations/018_confirm_emails.sql`](supabase/migrations/018_confirm_emails.sql).)
+
+Admin-created users already use `email_confirm: true`, but the project setting above still blocks unconfirmed accounts until you confirm them and/or disable Confirm email.
+
+### 5. Promote an admin
+
+For an existing Auth user (e.g. `alex@alex.com`), run in the SQL Editor:
+
+```sql
+UPDATE public.profiles
+SET role = 'admin', updated_at = NOW()
+WHERE email = 'alex@alex.com';
 ```
 
-### 4. Create an admin user
+(Or use [`supabase/migrations/017_promote_alex_admin.sql`](supabase/migrations/017_promote_alex_admin.sql).)
 
-1. Sign up via the app at `/auth/signup`
-2. In Supabase Dashboard → Table Editor → `profiles`
-3. Find your user and set `role` to `admin`
+Then sign in at `/auth/login` and open `/admin`.
 
-### 5. Start the dev server
+### 6. Start the dev server
 
 ```bash
 npm run dev
@@ -63,21 +87,27 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
+## Auth (invite-only)
+
+1. Admin creates a user at `/admin/users/new` (email + temporary password).
+2. User signs in at `/auth/login`.
+3. User can change their password in **Profile** (`/profile`).
+
 ## Project Structure
 
 ```
 src/
 ├── app/
-│   ├── admin/          # Admin CRUD (articles, videos, podcasts, jobs, challenges)
-│   ├── articles/       # Public articles
-│   ├── auth/           # Login, signup, callback
-│   ├── challenges/     # Public challenges
-│   ├── jobs/           # Public job posts
-│   ├── podcasts/       # Public podcasts
-│   └── videos/          # Public video courses
+│   ├── (main)/
+│   │   ├── admin/      # Admin CRUD (users, courses, enrollments, cohorts, content)
+│   │   ├── articles/
+│   │   ├── auth/       # Login, invite-only signup page, callback
+│   │   ├── enroll/     # Student enrollment wizard
+│   │   └── ...
+│   └── layout.tsx
 ├── components/
 ├── lib/
-│   └── supabase/       # Supabase client (browser, server, middleware)
+│   └── supabase/       # Browser, server, admin (service role), middleware
 └── types/
 ```
 
@@ -85,8 +115,11 @@ src/
 
 Access at `/admin` (admin role required). Manage:
 
+- **Users** - Create users, roles, remove, course access
+- **Cohorts** - Enrollment batches (active / inactive)
+- **Enrollments** - Review student applications
 - **Articles** - Title, slug, excerpt, content (HTML), cover image, published
-- **Videos** - Title, YouTube URL, description, duration, order
+- **Videos** - Title, YouTube URL, description, duration, order, access
 - **Podcasts** - Title, episode URL, description, cover, duration
 - **Jobs** - Title, company, description, location, type, salary, apply URL
 - **Challenges** - Title, description, rules, prize, start/end dates

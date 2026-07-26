@@ -67,12 +67,6 @@ export default async function Sidebar() {
               >
                 Sign In
               </Link>
-              <Link
-                href="/auth/signup"
-                className="flex-1 rounded-xl bg-[#2C2C2E] px-4 py-2 text-center text-[13px] font-semibold text-white ios-spring hover:bg-[#3A3A3C] active:scale-[0.97]"
-              >
-                Join Free
-              </Link>
             </div>
           </div>
         )}

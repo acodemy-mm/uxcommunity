@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Bookmark } from "lucide-react";
-import { toggleSave } from "@/app/articles/actions";
+import { toggleSave } from "@/app/(main)/articles/actions";
 
 interface SaveButtonProps {
   articleId: string;
